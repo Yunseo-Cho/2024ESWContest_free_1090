@@ -38,11 +38,15 @@ from ultralytics import YOLO
 
 # YOLOv8 모델 로드
 model = YOLO(r'C:\Users\yunse\OneDrive\바탕 화면\하늘소\볼라드\best.pt')
-
+'''
 # 테스트용 이미지 경로
 image_path = r'C:\Users\yunse\OneDrive\바탕 화면\하늘소\볼라드\사진\다운로드 (2).jpeg'
 
 image = cv2.imread(image_path)
+results = model(image) # 모델로 예측 수행
+'''
+
+image = cv2.imread(frame)
 results = model(image) # 모델로 예측 수행
 
 # 예측 결과에서 자동차 번호판 영역 추출 및 문자 인식
