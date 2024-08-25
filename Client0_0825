@@ -1,3 +1,5 @@
+#esp32-cam과 번호판 인식, 데이터베이스를 제외한 제어 코드
+
 import requests
 import time
 import cv2  # OpenCV 라이브러리
