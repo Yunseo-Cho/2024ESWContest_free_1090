@@ -31,15 +31,23 @@ def get_distance():
     t.sleep(1)
     return distance   
     
-def move_servo(angle):
-    if 0 <= angle <= 180:
-        response = requests.get(f"{url}/move_servo?angle={angle}")
+    
+def move_servos(angle1=None, angle2=None):
+    params = {}
+    
+    if angle1 is not None:
+        params['angle1'] = angle1
+    if angle2 is not None:
+        params['angle2'] = angle2
+
+    if params:
+        response = requests.get(f"{url}/move_servo", params=params)
         if response.status_code == 200:
-            print(f"Servo moved to angle: {angle}")
+            print(f"Servo(s) moved to angles: angle1={angle1}, angle2={angle2}")
         else:
-            print("Failed to move servo")
+            print("Failed to move servo(s)")
     else:
-        print("Invalid angle. Must be between 0 and 180.")
+        print("No valid angles provided. Must provide at least one angle between 0 and 180.")
 
 def control_led(color, state):
     response = requests.get(f"{url}/control_led?color={color}&state={state}")
@@ -168,7 +176,7 @@ def main():
         elif current_state == "Bollard Lowering State":
             control_led("all", "on")
             play_melody(2)
-            move_servo(0)
+            move_servos(angle1=20,angle2=180) #내려가는
             current_state = "Parking Standby State"
             
         
@@ -233,7 +241,7 @@ def main():
         elif current_state == "Bollard Raising State":
             control_led("all", "on")
             play_melody(2)
-            move_servo(90)
+            move_servos(angle1=180,angle2=20) #올라가는
             current_state = "Basic State"
 
 
