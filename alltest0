@@ -5,7 +5,7 @@ import requests
 import torch
 import re
 import mysql.connector
-import time as t
+import time
 
 url = "http://192.168.0.29/capture"  # ESP32-CAM의 IP 주소
 esp8266_url = "http://192.168.0.39"  # ESP32 제어용 URL
@@ -38,15 +38,16 @@ def compare_license_plate(conn, recognized_plate):
         return False, None
 
 def get_distance():
+    distance=0
     try:
-        response = requests.get(f"{esp32_url}/distance")
+        response = requests.get(f"{esp8266_url}/distance")
         distance = float(response.text)
         print(f"Distance: {distance} cm")
         
     except Exception as e:
         print(f"Failed to retrieve data: {e}")
 
-    t.sleep(1)
+    time.sleep(1)
     return distance
 
 def move_servos(angle1=None, angle2=None):
@@ -58,7 +59,7 @@ def move_servos(angle1=None, angle2=None):
         params['angle2'] = angle2
 
     if params:
-        response = requests.get(f"{esp32_url}/move_servo", params=params)
+        response = requests.get(f"{esp8266_url}/move_servo", params=params)
         if response.status_code == 200:
             print(f"Servo(s) moved to angles: angle1={angle1}, angle2={angle2}")
         else:
@@ -67,7 +68,7 @@ def move_servos(angle1=None, angle2=None):
         print("No valid angles provided. Must provide at least one angle between 0 and 180.")
 
 def control_led(color, state):
-    response = requests.get(f"{esp32_url}/control_led?color={color}&state={state}")
+    response = requests.get(f"{esp8266_url}/control_led?color={color}&state={state}")
     if response.status_code == 200:
         print(f"{color.capitalize()} LED turned {state}")
     else:
@@ -75,9 +76,9 @@ def control_led(color, state):
 
 def play_melody(melody_number):
     if melody_number == 1:
-        response = requests.get(f"{esp32_url}/play_melody1", timeout=10)
+        response = requests.get(f"{esp8266_url}/play_melody1", timeout=10)
     elif melody_number == 2:
-        response = requests.get(f"{esp32_url}/play_melody2", timeout=10)
+        response = requests.get(f"{esp8266_url}/play_melody2", timeout=10)
     else:
         print("Invalid melody number")
         return
@@ -88,7 +89,7 @@ def play_melody(melody_number):
         print(f"Failed to play Melody {melody_number}")
 
 def play_buzzer():
-    response = requests.get(f"{esp32_url}/play_buzzer")
+    response = requests.get(f"{esp8266_url}/play_buzzer")
     if response.status_code == 200:
         print("Buzzer played successfully")
     else:
@@ -169,7 +170,7 @@ def main():
                         current_state = "Unauthorized State"
                         break
                 else:
-                    t.sleep(1)
+                    time.sleep(1)
                     distance = get_distance()
                     if distance >= 40:
                         current_state = "Basic State"
@@ -179,7 +180,7 @@ def main():
             control_led("all", "off")
             control_led("green", "on")
             play_melody(1)
-            t.sleep(1)
+            time.sleep(1)
             current_state = "Bollard Lowering State"
             
         elif current_state == "Unauthorized State":
@@ -194,9 +195,9 @@ def main():
                         control_led('red', 'on')
                         play_buzzer()
                         control_led('red', 'off')
-                        t.sleep(0.3)
+                        time.sleep(0.3)
                     control_led('red', 'on')
-                    t.sleep(3)
+                    time.sleep(3)
                     start_time = None
                 elif distance >= 40:
                     if start_time is None:
