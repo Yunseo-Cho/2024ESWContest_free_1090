@@ -97,7 +97,7 @@ def play_buzzer():
 
 def recognize_license_plate(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_blurred = cv2.GaussianBlur(gray, ksize=(5, 5), sigmaX=0)
+    img_blurred = cv2.GaussianBlur(gray, ksize=(5, 5), sigmaX=0) #지워도 실행 되는지 확인 필요
     img_thresh = cv2.adaptiveThreshold(
         img_blurred,
         maxValue=255.0,
