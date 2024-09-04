@@ -2,8 +2,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 
-const char* ssid = "HANULSO_2.4G";
-const char* password = "hanulso8421";
+const char *ssid = "HANULSO_2.4G";
+const char *password = "hanulso8421";
 
 Servo servo1;
 Servo servo2;
@@ -12,25 +12,23 @@ Servo servo2;
 #define TRIG_PIN D0  // 거리 센서 Trig
 #define ECHO_PIN D1  // 거리 센서 Echo
 
-#define LED_PIN_1 D2  // LED 1
-#define LED_PIN_2 D5  // LED 2
-#define LED_PIN_3 D6  // LED 3
+#define LED_PIN_1 D2  // LED 빨강
+#define LED_PIN_2 D5  // LED 노랑
+#define LED_PIN_3 D6  // LED 초록
 
 #define SERVO_PIN_1 D3  // 서보 모터 1
 #define SERVO_PIN_2 D4  // 서보 모터 2
 
-#define MELODY_IC_1 D7  // 멜로디 IC 1
-#define MELODY_IC_2 D8  // 멜로디 IC 2
+#define MELODY_IC_1 D7  // 멜로디 IC 1 (딩동)
+#define MELODY_IC_2 D8  // 멜로디 IC 2 (엘리제를 위하여)
 
-#define BUZZER_PIN D9  // 능동 부저
+#define BUZZER_PIN D9  // 부저
 
 ESP8266WebServer server(80);
 
 void setup() {
-  // 시리얼 모니터 초기화
   Serial.begin(115200);
 
-  // WiFi 연결
   WiFi.begin(ssid, password);
   
   int attempts = 0;
@@ -39,16 +37,16 @@ void setup() {
     Serial.print("Connecting to WiFi");
     Serial.println(attempts);
     attempts++;
-    if (attempts > 20) {  // 20번 시도 후 실패 시 코드 재시작
+    if (attempts > 20) {  
       Serial.println("Failed to connect to WiFi. Restarting...");
-      ESP.restart();  // WiFi 연결 실패 시 재시작
+      ESP.restart();  
     }
   }
   
   Serial.println("Connected to WiFi");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
-  // 핀 설정
+
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
@@ -61,16 +59,16 @@ void setup() {
 
   pinMode(BUZZER_PIN, OUTPUT);
 
-  // 서보 모터 초기화
   servo1.attach(SERVO_PIN_1);
   servo2.attach(SERVO_PIN_2);
 
-  // 엔드포인트 설정
   server.on("/distance", HTTP_GET, handleDistance);
   server.on("/move_servo", handleMoveServo);
   server.on("/control_led", handleControlLED);
-  server.on("/play_melody1", handlePlayMelody1);
-  server.on("/play_melody2", handlePlayMelody2);
+  server.on("/start_melody1", handleStartMelody1);
+  server.on("/stop_melody1", handleStopMelody1);
+  server.on("/start_melody2", handleStartMelody2);
+  server.on("/stop_melody2", handleStopMelody2);
   server.on("/play_buzzer", handlePlayBuzzer);
 
   server.begin();
@@ -120,7 +118,7 @@ void handleControlLED() {
         String color = server.arg("color");
         String state = server.arg("state");
 
-        int pins[3];  // 모든 LED 핀 배열
+        int pins[3];  
         int pinCount = 0;
 
         if (color == "red") {
@@ -143,16 +141,16 @@ void handleControlLED() {
         }
 
         if (state == "blink") {
-            for (int j = 0; j < 3; j++) {  // 5번 깜빡임
+            for (int j = 0; j < 3; j++) {  
                 for (int i = 0; i < pinCount; i++) {
                     digitalWrite(pins[i], HIGH);
                 }
-                delay(500);  // 0.5초 동안 켬
+                delay(500); 
 
                 for (int i = 0; i < pinCount; i++) {
                     digitalWrite(pins[i], LOW);
                 }
-                delay(500);  // 0.5초 동안 끔
+                delay(500); 
             }
         } else {
             for (int i = 0; i < pinCount; i++) {
@@ -168,46 +166,35 @@ void handleControlLED() {
 
 
 
-void handlePlayMelody1() {
-  // 클라이언트에게 즉시 응답을 보냄
+void handleStartMelody1() {
   server.send(200, "text/plain", "Melody 1 started");
-  
-  // 멜로디 1 (딩동)을 재생
-  digitalWrite(MELODY_IC_1, HIGH);  // Turn on transistor 1
-  delay(1500);  // Play for 1.5 seconds
-  digitalWrite(MELODY_IC_1, LOW);   // Turn off transistor 1
-  
-  // 추가 딜레이
-  delay(2000);  // Pause for 2 seconds
+  digitalWrite(MELODY_IC_1, HIGH);  
 }
 
-void handlePlayMelody2() {
-  // 클라이언트에게 즉시 응답을 보냄
+void handleStopMelody1() {
+  server.send(200, "text/plain", "Melody 1 stopped");
+  digitalWrite(MELODY_IC_1, LOW); 
+}
+
+void handleStartMelody2() {
   server.send(200, "text/plain", "Melody 2 started");
-  
-  // 멜로디 2 (엘리제를 위하여)를 재생
-  digitalWrite(MELODY_IC_2, HIGH);  // Turn on transistor 2
-  delay(2500);  // Play for 3 seconds
-  digitalWrite(MELODY_IC_2, LOW);   // Turn off transistor 2
-  
-  // 추가 딜레이
-  delay(2000);  // Pause for 2 seconds
+  digitalWrite(MELODY_IC_2, HIGH);  
 }
 
+void handleStopMelody2() {
+  server.send(200, "text/plain", "Melody 2 stopped");
+  digitalWrite(MELODY_IC_2, LOW); 
+}
 
 
 void handlePlayBuzzer() {
-  // 0.5초 간격으로 5번 울리는 부저
-  for (int i = 0; i < 5; i++) {
-    tone(BUZZER_PIN, 1000);  // 1kHz 주파수로 톤 발생
+    tone(BUZZER_PIN, 1000);
     delay(500);
-    noTone(BUZZER_PIN);      // 부저 끄기
-    delay(500);
-  }
+    noTone(BUZZER_PIN);  
+ 
   server.send(200, "text/plain", "Buzzer played");
 }
 
 void loop() {
     server.handleClient();
 }
-
